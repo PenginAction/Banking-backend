@@ -14,7 +14,7 @@ type Configs struct {
 	DbPort      string
 	DbName      string
 	BankLogfile string
-	Port        string
+	Port        int
 }
 
 var Config Configs
@@ -33,5 +33,6 @@ func init() {
 		DbPort:      cfg.Section("database").Key("dbport").String(),
 		DbName:      cfg.Section("database").Key("dbname").String(),
 		BankLogfile: cfg.Section("bank").Key("logfile").String(),
+		Port:        cfg.Section("web").Key("port").MustInt(),
 	}
 }
