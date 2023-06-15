@@ -38,8 +38,38 @@ func CreateAccount(name, email, password string) (*User, error) {
 		UserId:   int(id),
 		Name:     name,
 		Email:    email,
-		Password: string(hashPass),
 	}, nil
 
 }
 
+
+func GetAccountByEmail(email string) (*User, error){
+	var user User
+	statement := `SELECT UserId, Name, Email, Password FROM User WHERE email = ?`
+	err := database.Db.QueryRow(statement, email).Scan(&user.UserId, &user.Name, &user.Email, &user.Password)
+	if err != nil{
+		log.Printf("データベースからメールアドレスの取得に失敗しました: %s", err.Error())
+		return nil, err
+	}
+	return &user, nil
+}
+
+func CompareHashAndPassword(userPassword string, password string) error{
+	err := bcrypt.CompareHashAndPassword([]byte(userPassword), []byte(password))
+	if err != nil{
+		log.Printf("認証に失敗しました：パスワードが一致しません．")
+		return err
+	}
+	return nil
+}
+
+func GetAccountById(id int) (*User, error){
+	var user User
+	statement := `SELECT UserId, Name, Email, Password FROM User WHERE UserId = ?`
+	err := database.Db.QueryRow(statement, id).Scan(&user.UserId, &user.Name, &user.Email, &user.Password)
+	if err != nil {
+		log.Printf("データベースからユーザーIDの取得に失敗しました: %s", err.Error())
+		return nil, err
+	}
+	return &user, nil
+}
