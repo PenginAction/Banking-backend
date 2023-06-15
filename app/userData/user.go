@@ -21,8 +21,8 @@ func CreateAccount(name, email, password string) (*User, error) {
 		return nil, err
 	}
 
-	statement := `INSERT INTO User (Name, Email, Password) VALUES (?, ?, ?)`
-	res, err := database.Db.Exec(statement, name, email, hashPass)
+	statement1 := `INSERT INTO User (Name, Email, Password) VALUES (?, ?, ?)`
+	res, err := database.Db.Exec(statement1, name, email, hashPass)
 	if err != nil {
 		log.Printf("データベースへのユーザー挿入に失敗しました: %s", err.Error())
 		return nil, err
@@ -31,6 +31,14 @@ func CreateAccount(name, email, password string) (*User, error) {
 	id, err := res.LastInsertId()
 	if err != nil {
 		log.Printf("挿入されたデータのIDの取得に失敗しました: %s", err.Error())
+		return nil, err
+	}
+
+	firstBalance := 0.0
+	statement2 := `INSERT INTO Account (UserId, Balance) VALUES (?, ?)`
+	_, err = database.Db.Exec(statement2, id, firstBalance)
+	if err != nil{
+		log.Printf("口座開設できませんでした: %s", err.Error())
 		return nil, err
 	}
 
