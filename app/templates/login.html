@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ログイン</title>
+</head>
+<body>
+    <h1>ログインページ</h1>
+    
+    <form action="/login" method="post">
+        <p>メールアドレス</p>
+        <input type="email" id="email" name="email" pattern=".+@.+\..+" maxlength="30">
+
+        <p>パスワード</p>
+        <input type="password" id="password" name="password" size="30" maxlength="30">
+
+        <br>
+        <br>
+        <button type="submit" id="submit">ログイン</button>
+    </form>
+
+</body>
+</html>
