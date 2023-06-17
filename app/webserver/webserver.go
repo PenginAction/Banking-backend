@@ -1,6 +1,8 @@
 package webserver
 
 import (
+	acountdata "bank/app/acountData"
+	transactiondata "bank/app/transactionData"
 	"bank/app/userData"
 	"bank/config"
 	"bank/utils"
@@ -8,6 +10,7 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"strconv"
 
 	"github.com/gorilla/sessions"
 )
@@ -125,10 +128,57 @@ func AccountHandler(w http.ResponseWriter, r *http.Request){
     }
 }
 
+func DepositHandler(w http.ResponseWriter, r *http.Request){
+	if r.Method == "POST" {
+		amountStr := r.FormValue("amount")
+		amount, err := strconv.ParseFloat(amountStr, 64)
+		if err != nil{
+			http.Error(w, "不正な金額です", http.StatusBadRequest)
+			return
+		}
+
+		session, err := store.Get(r, "session-name")
+		if err != nil{
+			http.Error(w, "セッションの取得に失敗しました", http.StatusInternalServerError)
+			return
+		}
+
+		userId := session.Values["user_id"]
+
+		account, err := acountdata.GetAccountByUserId(userId.(int))
+		if err != nil{
+			http.Error(w, "アカウントが見つかりません", http.StatusInternalServerError)
+			return
+		}
+
+		err = transactiondata.CreateTransaction(account.AccountID, amount, "入金")
+		if err != nil{
+			http.Error(w, "入金処理に失敗しました", http.StatusInternalServerError)
+			return
+		}
+
+		err = acountdata.UpdateBalance(account.AccountID, account.Balance + amount)
+		if err != nil{
+			http.Error(w, "口座残高の更新に失敗しました", http.StatusInternalServerError)
+			return
+		}
+
+		http.Redirect(w, r, "/account", http.StatusSeeOther)
+	} else {
+		err := utils.RenderTemplate(w, "app/templates/deposit.html", nil)
+		if err != nil{
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+	}
+
+
+}
+
 func Start() error{
 	http.HandleFunc("/create", CreateAccountHandler)
 	http.HandleFunc("/", firstHandler)
 	http.HandleFunc("/login", LoginHandler)
 	http.HandleFunc("/account", AuthRequiredHandler(AccountHandler))
+	http.HandleFunc("/deposit", DepositHandler)
 	return http.ListenAndServe(fmt.Sprintf(":%d", config.Config.Port), nil)
 }
