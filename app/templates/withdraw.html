@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>出金</title>
+</head>
+<body>
+    <h1>出金</h1>
+
+    <form action="/withdraw" method="post">
+        <label for="amount">出金額を入力してください．</label><br>
+        <input type="number" id="amount" name="amount" min="0" step="0.01" required></br>
+        <input type="submit" value="出金">
+    </form>   
+</body>
+</html>
