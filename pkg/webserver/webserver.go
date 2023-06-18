@@ -1,10 +1,10 @@
 package webserver
 
 import (
-	acountdata "bank/app/acountData"
-	transactiondata "bank/app/transactionData"
-	"bank/app/userData"
 	"bank/config"
+	"bank/pkg/acountData"
+	"bank/pkg/transactiondata"
+	"bank/pkg/userData"
 	"bank/utils"
 	"encoding/json"
 	"fmt"

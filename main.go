@@ -1,7 +1,7 @@
 package main
 
 import (
-	"bank/app/webserver"
+	"bank/pkg/webserver"
 	"bank/config"
 	"bank/utils"
 	
