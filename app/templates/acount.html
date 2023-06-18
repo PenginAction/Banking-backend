@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>口座</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #dddddd;
+            text-align: left;
+            padding: 8px;
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <h1>Hello Banking</h1>
+
+    <h2>残高: <span id="balance">{{.Balance}}</span></h2>
+    <button onclick="window.location.href='/deposit';">入金</button>
+    <button onclick="window.location.href='/withdraw';">出金</button>
+
+    <h2>取引履歴</h2>
+    <table>
+        <tr>
+            <th>日付</th>
+            <th>取引タイプ</th>
+            <th>金額</th>
+        </tr>
+        {{range .Transactions}}
+        <tr>
+            <td>{{.TransactionDate}}</td>
+            <td>{{if eq .TransactionType "入金"}}入金{{else}}出金{{end}}</td>
+            <td>{{.TransactionAmount}}</td>
+        </tr>
+        {{end}}
+    </table>
+</body>
+</html>
