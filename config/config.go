@@ -22,7 +22,7 @@ var Config Configs
 func init() {
 	cfg, err := ini.Load("config.ini")
 	if err != nil {
-		log.Printf("Failed to read file: %v", err)
+		log.Printf("ファイルの読み込みに失敗しました: %v", err)
 		os.Exit(1)
 	}
 
