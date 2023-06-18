@@ -3,7 +3,7 @@ package webserver
 import (
 	"bank/config"
 	"bank/pkg/acountData"
-	"bank/pkg/transactiondata"
+	"bank/pkg/transactionData"
 	"bank/pkg/userData"
 	"bank/utils"
 	"encoding/json"
@@ -78,7 +78,6 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 		http.Redirect(w, r, "/account", http.StatusSeeOther)
 	} else {
-		// tmpl, err := template.ParseFiles("app/templates/login.html")
 		err := utils.RenderTemplate(w, "app/templates/login.html", nil)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
