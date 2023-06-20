@@ -68,7 +68,7 @@ func CreateUser(name, email, password, pin string) (*User, error) {
 
 	hashPin, err := bcrypt.GenerateFromPassword([]byte(pin), bcrypt.DefaultCost)
 	if err != nil {
-		log.Printf("パスワードのハッシュ化に失敗しました: %s", err.Error())
+		log.Printf("暗証番号のハッシュ化に失敗しました: %s", err.Error())
 		return nil, err
 	}
 
@@ -100,10 +100,9 @@ func CreateUser(name, email, password, pin string) (*User, error) {
 	}
 
 	return &User{
+		UserId: int(id),
 		Name:   name,
 		Email:  email,
-		Password: password,
-		Pin: pin,
 	}, nil
 
 }
