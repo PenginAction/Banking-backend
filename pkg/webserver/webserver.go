@@ -26,7 +26,7 @@ func CreateAccountHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = userdata.CreateAccount(user.Name, user.Email, user.Password)
+	_, err = userdata.CreateUser(user.Name, user.Email, user.Password, user.Pin)
 	if err != nil {
 		http.Error(w, "アカウント作成を失敗しました", http.StatusInternalServerError)
 		return
@@ -147,6 +147,8 @@ func AccountHandler(w http.ResponseWriter, r *http.Request) {
 func DepositHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 		amountStr := r.FormValue("amount")
+		pin := r.FormValue("pin")
+
 		amount, err := strconv.ParseFloat(amountStr, 64)
 		if err != nil {
 			http.Error(w, "不正な金額です", http.StatusBadRequest)
@@ -164,6 +166,18 @@ func DepositHandler(w http.ResponseWriter, r *http.Request) {
 		account, err := acountdata.GetAccountByUserId(userId.(int))
 		if err != nil {
 			http.Error(w, "アカウントが見つかりません", http.StatusInternalServerError)
+			return
+		}
+
+		user, err := userdata.GetAccountById(userId.(int))
+		if err != nil {
+			http.Error(w, "User not found", http.StatusNotFound)
+			return
+		}
+
+		err = userdata.CompareHashAndPin(user.Pin, pin)
+		if err != nil {
+			http.Error(w, "暗証番号が違います", http.StatusUnauthorized)
 			return
 		}
 
@@ -193,6 +207,8 @@ func DepositHandler(w http.ResponseWriter, r *http.Request) {
 func WithdrawHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 		amountStr := r.FormValue("amount")
+		pin := r.FormValue("pin")
+
 		amount, err := strconv.ParseFloat(amountStr, 64)
 		if err != nil || amount <= 0 {
 			http.Error(w, "無効な金額が入力されました", http.StatusBadRequest)
@@ -211,6 +227,19 @@ func WithdrawHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "アカウントが見つかりません", http.StatusNotFound)
 			return
 		}
+
+		user, err := userdata.GetAccountById(userId.(int))
+		if err != nil {
+			http.Error(w, "User not found", http.StatusNotFound)
+			return
+		}
+
+		err = userdata.CompareHashAndPin(user.Pin, pin)
+		if err != nil {
+			http.Error(w, "暗証番号が違います", http.StatusUnauthorized)
+			return
+		}
+
 
 		if account.Balance < amount {
 			http.Error(w, "口座の残高が不足しています．", http.StatusBadRequest)
