@@ -13,7 +13,7 @@ type Account struct {
 
 func GetAccountByUserId(id int) (*Account, error) {
 	var account Account
-	statement := `SELECT * FROM Account WHERE UserID = ?`
+	statement := `SELECT AccountID, Balance, UserID FROM Account WHERE UserID = ?`
 	err := database.Db.QueryRow(statement, id).Scan(&account.AccountID, &account.Balance, &account.UserID)
 	if err != nil {
 		log.Printf("ユーザーIDに対応するアカウントの取得に失敗しました:%s", err.Error())
