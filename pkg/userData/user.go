@@ -12,17 +12,24 @@ type User struct {
 	Name     string `json:"name"`
 	Email    string `json:"email"`
 	Password string `json:"password"`
+	Pin string `json:"pin"`
 }
 
-func CreateAccount(name, email, password string) (*User, error) {
+func CreateUser(name, email, password, pin string) (*User, error) {
 	hashPass, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		log.Printf("パスワードのハッシュ化に失敗しました: %s", err.Error())
 		return nil, err
 	}
 
-	statement1 := `INSERT INTO User (Name, Email, Password) VALUES (?, ?, ?)`
-	res, err := database.Db.Exec(statement1, name, email, hashPass)
+	hashPin, err := bcrypt.GenerateFromPassword([]byte(pin), bcrypt.DefaultCost)
+	if err != nil {
+		log.Printf("パスワードのハッシュ化に失敗しました: %s", err.Error())
+		return nil, err
+	}
+
+	statement1 := `INSERT INTO User (Name, Email, Password, Pin) VALUES (?, ?, ?, ?)`
+	res, err := database.Db.Exec(statement1, name, email, hashPass, hashPin)
 	if err != nil {
 		log.Printf("データベースへのユーザー挿入に失敗しました: %s", err.Error())
 		return nil, err
@@ -43,17 +50,18 @@ func CreateAccount(name, email, password string) (*User, error) {
 	}
 
 	return &User{
-		UserId: int(id),
 		Name:   name,
 		Email:  email,
+		Password: password,
+		Pin: pin,
 	}, nil
 
 }
 
 func GetAccountByEmail(email string) (*User, error) {
 	var user User
-	statement := `SELECT UserId, Name, Email, Password FROM User WHERE email = ?`
-	err := database.Db.QueryRow(statement, email).Scan(&user.UserId, &user.Name, &user.Email, &user.Password)
+	statement := `SELECT UserId, Name, Email, Password, Pin FROM User WHERE Email = ?`
+	err := database.Db.QueryRow(statement, email).Scan(&user.UserId, &user.Name, &user.Email, &user.Password, &user.Pin)
 	if err != nil {
 		log.Printf("データベースからメールアドレスの取得に失敗しました: %s", err.Error())
 		return nil, err
@@ -61,7 +69,7 @@ func GetAccountByEmail(email string) (*User, error) {
 	return &user, nil
 }
 
-func CompareHashAndPassword(userPassword string, password string) error {
+func CompareHashAndPassword(userPassword, password string) error {
 	err := bcrypt.CompareHashAndPassword([]byte(userPassword), []byte(password))
 	if err != nil {
 		log.Printf("認証に失敗しました：パスワードが一致しません．")
@@ -72,11 +80,20 @@ func CompareHashAndPassword(userPassword string, password string) error {
 
 func GetAccountById(id int) (*User, error) {
 	var user User
-	statement := `SELECT UserId, Name, Email, Password FROM User WHERE UserId = ?`
-	err := database.Db.QueryRow(statement, id).Scan(&user.UserId, &user.Name, &user.Email, &user.Password)
+	statement := `SELECT UserId, Name, Email, Password, Pin FROM User WHERE UserId = ?`
+	err := database.Db.QueryRow(statement, id).Scan(&user.UserId, &user.Name, &user.Email, &user.Password, &user.Pin)
 	if err != nil {
 		log.Printf("データベースからユーザーIDの取得に失敗しました: %s", err.Error())
 		return nil, err
 	}
 	return &user, nil
+}
+
+func CompareHashAndPin(userPin, pin string) error{
+	err := bcrypt.CompareHashAndPassword([]byte(userPin), []byte(pin))
+	if err != nil {
+		log.Printf("認証に失敗しました: 暗証番号が一致しません")
+		return err
+	}
+	return nil
 }
