@@ -17,6 +17,9 @@
     <p>パスワード</p>
     <input type="password" id="password" name="password" size="30" maxlength="30">
 
+    <p>暗証番号</p>
+    <input type="password" id="pin" name="pin" size="30" maxlength="4">
+
     <br><br>
     <button type="button" id="submit">アカウント作成</button>
 
@@ -28,7 +31,8 @@
             xhr.send(JSON.stringify({
                 name: document.getElementById('name').value,
                 email: document.getElementById('email').value,
-                password: document.getElementById('password').value
+                password: document.getElementById('password').value,
+                pin: document.getElementById('pin').value
             }));
 
             xhr.onload = function() {
