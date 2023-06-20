@@ -25,7 +25,7 @@ func CreateTransaction(accountId int, amount float64, transactionType string) er
 
 func GetTransactionByAccountId(id int) ([]Transaction, error) {
 	var transactions []Transaction
-	statement := `SELECT * FROM Transaction WHERE AccountID = ?`
+	statement := `SELECT TransactionID, TransactioonAmount, TransactionType, TransactionDate, AccountID FROM Transaction WHERE AccountID = ?`
 	rows, err := database.Db.Query(statement, id)
 	if err != nil {
 		log.Printf("アカントIDに対応する取引の取得に失敗しました:%s", err.Error())
