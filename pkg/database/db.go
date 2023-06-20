@@ -23,6 +23,6 @@ func init(){
 	var  err error
 	Db, err = sql.Open("mysql",cmd)
 	if err != nil{
-		log.Fatal("err")
+		log.Fatalf("データベース接続に失敗しました: %v", err)
 	}
 }
