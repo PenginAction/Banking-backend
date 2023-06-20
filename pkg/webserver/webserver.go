@@ -112,6 +112,7 @@ func AccountHandler(w http.ResponseWriter, r *http.Request) {
 	userID, ok := session.Values["user_id"].(int)
 	if !ok {
 		http.Error(w, "Session内のユーザーIDの取得に失敗しました", http.StatusInternalServerError)
+		return
 	}
 
 	user, err := userdata.GetAccountById(userID)
