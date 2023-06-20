@@ -2,7 +2,10 @@ package userdata
 
 import (
 	"bank/pkg/database"
+	"errors"
 	"log"
+	"math/rand"
+	"time"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -13,6 +16,47 @@ type User struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
 	Pin string `json:"pin"`
+}
+
+var r *rand.Rand
+
+func init() {
+	s := rand.NewSource(time.Now().UnixNano())
+	r = rand.New(s)
+}
+
+func generateAccountID(length int) string {
+	const charset = "1234567890"
+	result := make([]byte, length)
+	for i := range result {
+		result[i] = charset[r.Intn(len(charset))]
+	}
+	return string(result)
+}
+
+func generateUniqueAccountID(length int) (string, error) {
+	const maxAttempts = 5
+	for attempt := 0; attempt < maxAttempts; attempt++ {
+		accountID := generateAccountID(length)
+		exists, err := checkAccountIDExists(accountID)
+		if err != nil {
+			return "", err
+		}
+		if !exists {
+			return accountID, nil
+		}
+	}
+	return "", errors.New("複数回の試行後でも一意のアカウントIDを生成できませんでした")
+}
+
+func checkAccountIDExists(accountID string) (bool, error) {
+	statement := `SELECT COUNT(*) FROM Account WHERE AccountID = ?`
+	var count int
+	err := database.Db.QueryRow(statement, accountID).Scan(&count)
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
 }
 
 func CreateUser(name, email, password, pin string) (*User, error) {
@@ -41,9 +85,15 @@ func CreateUser(name, email, password, pin string) (*User, error) {
 		return nil, err
 	}
 
+	accountID, err := generateUniqueAccountID(10)
+	if err != nil {
+		log.Printf("口座番号の作成ができません: %s", err.Error())
+		return nil, err
+	}
+
 	firstBalance := 0.0
-	statement2 := `INSERT INTO Account (UserId, Balance) VALUES (?, ?)`
-	_, err = database.Db.Exec(statement2, id, firstBalance)
+	statement2 := `INSERT INTO Account (AccountID, UserId, Balance) VALUES (?, ?, ?)`
+	_, err = database.Db.Exec(statement2, accountID, id, firstBalance)
 	if err != nil {
 		log.Printf("口座開設できませんでした: %s", err.Error())
 		return nil, err
