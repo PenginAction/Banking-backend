@@ -134,6 +134,7 @@ func AccountHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	data := map[string]interface{}{
 		"User":         user,
+		"AccountID":    account.AccountID,
 		"Balance":      account.Balance,
 		"Transactions": transactions,
 	}
@@ -240,7 +241,6 @@ func WithdrawHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "暗証番号が違います", http.StatusUnauthorized)
 			return
 		}
-
 
 		if account.Balance < amount {
 			http.Error(w, "口座の残高が不足しています．", http.StatusBadRequest)
