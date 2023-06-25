@@ -2,9 +2,9 @@ package webserver
 
 import (
 	"bank/config"
-	"bank/pkg/acountData"
-	"bank/pkg/transactionData"
-	"bank/pkg/userData"
+	acountdata "bank/pkg/acountData"
+	transactiondata "bank/pkg/transactionData"
+	userdata "bank/pkg/userData"
 	"bank/utils"
 	"encoding/json"
 	"fmt"
@@ -139,7 +139,7 @@ func AccountHandler(w http.ResponseWriter, r *http.Request) {
 		"Transactions": transactions,
 	}
 
-	err = utils.RenderTemplate(w, "app/templates/acount.html", data)
+	err = utils.RenderTemplate(w, "app/templates/account.html", data)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -268,6 +268,93 @@ func WithdrawHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func TransferHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "POST" {
+		amountStr := r.FormValue("amount")
+		pin := r.FormValue("pin")
+		recipientAccountIdStr := r.FormValue("accountID")
+
+		amount, err := strconv.ParseFloat(amountStr, 64)
+		if err != nil || amount <= 0 {
+			http.Error(w, "無効な金額が入力されました", http.StatusBadRequest)
+			return
+		}
+
+		recipientAccountId, err := strconv.Atoi(recipientAccountIdStr)
+		if err != nil {
+			http.Error(w, "無効な受取人アカウントIDが入力されました", http.StatusBadRequest)
+			return
+		}
+
+		session, err := store.Get(r, "session-name")
+		if err != nil {
+			http.Error(w, "セッションの取得に失敗しました", http.StatusInternalServerError)
+			return
+		}
+
+		userId := session.Values["user_id"]
+		account, err := acountdata.GetAccountByUserId(userId.(int))
+		if err != nil {
+			http.Error(w, "アカウントが見つかりません", http.StatusNotFound)
+			return
+		}
+
+		user, err := userdata.GetAccountById(userId.(int))
+		if err != nil {
+			http.Error(w, "User not found", http.StatusNotFound)
+			return
+		}
+
+		err = userdata.CompareHashAndPin(user.Pin, pin)
+		if err != nil {
+			http.Error(w, "暗証番号が違います", http.StatusUnauthorized)
+			return
+		}
+
+		if account.Balance < amount {
+			http.Error(w, "口座の残高が不足しています．", http.StatusBadRequest)
+			return
+		}
+
+		err = transactiondata.CreateTransaction(account.AccountID, -amount, "出金")
+		if err != nil {
+			http.Error(w, "取引を処理することができませんでした", http.StatusInternalServerError)
+			return
+		}
+
+		err = transactiondata.CreateTransaction(recipientAccountId, amount, "入金")
+		if err != nil {
+			http.Error(w, "取引を処理することができませんでした", http.StatusInternalServerError)
+			return
+		}
+
+		err = acountdata.UpdateBalance(account.AccountID, account.Balance-amount)
+		if err != nil {
+			http.Error(w, "口座の残高を更新できませんでした", http.StatusInternalServerError)
+			return
+		}
+
+		recipientAccount, err := acountdata.GetAccountByAccountId(recipientAccountId)
+		if err != nil {
+			http.Error(w, "受取人のアカウントが見つかりませんでした", http.StatusNotFound)
+			return
+		}
+
+		err = acountdata.UpdateBalance(recipientAccountId, recipientAccount.Balance+amount)
+		if err != nil {
+			http.Error(w, "受取人の口座の残高を更新できませんでした", http.StatusInternalServerError)
+			return
+		}
+
+		http.Redirect(w, r, "/account", http.StatusSeeOther)
+	} else {
+		err := utils.RenderTemplate(w, "app/templates/transfer.html", nil)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+	}
+}
+
 func Start() error {
 	http.HandleFunc("/create", CreateAccountHandler)
 	http.HandleFunc("/", firstHandler)
@@ -275,5 +362,6 @@ func Start() error {
 	http.HandleFunc("/account", AuthRequiredHandler(AccountHandler))
 	http.HandleFunc("/deposit", DepositHandler)
 	http.HandleFunc("/withdraw", WithdrawHandler)
+	http.HandleFunc("/transfer", TransferHandler)
 	return http.ListenAndServe(fmt.Sprintf(":%d", config.Config.Port), nil)
 }
