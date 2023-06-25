@@ -129,7 +129,7 @@ func AccountHandler(w http.ResponseWriter, r *http.Request) {
 
 	transactions, err := transactiondata.GetTransactionByAccountId(account.AccountID)
 	if err != nil {
-		http.Error(w, "取引履歴を取得することができませんでした", http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("取引履歴を取得することができませんでした: %v", err), http.StatusInternalServerError)
 		return
 	}
 	data := map[string]interface{}{
@@ -183,7 +183,7 @@ func DepositHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		err = transactiondata.CreateTransaction(account.AccountID, amount, "入金")
+		err = transactiondata.CreateTransaction(account.AccountID, account.AccountID, amount, "入金")
 		if err != nil {
 			http.Error(w, "入金処理に失敗しました", http.StatusInternalServerError)
 			return
@@ -247,7 +247,7 @@ func WithdrawHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		err = transactiondata.CreateTransaction(account.AccountID, amount, "出金")
+		err = transactiondata.CreateTransaction(account.AccountID, account.AccountID, amount, "出金")
 		if err != nil {
 			http.Error(w, "取引を処理することができませんでした", http.StatusInternalServerError)
 			return
@@ -275,7 +275,7 @@ func TransferHandler(w http.ResponseWriter, r *http.Request) {
 		recipientAccountIdStr := r.FormValue("accountID")
 
 		amount, err := strconv.ParseFloat(amountStr, 64)
-		if err != nil || amount <= 0 {
+		if err != nil {
 			http.Error(w, "無効な金額が入力されました", http.StatusBadRequest)
 			return
 		}
@@ -311,38 +311,9 @@ func TransferHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		if account.Balance < amount {
-			http.Error(w, "口座の残高が不足しています．", http.StatusBadRequest)
-			return
-		}
-
-		err = transactiondata.CreateTransaction(account.AccountID, -amount, "出金")
+		err = acountdata.TransferFunds(account.AccountID, recipientAccountId, amount)
 		if err != nil {
-			http.Error(w, "取引を処理することができませんでした", http.StatusInternalServerError)
-			return
-		}
-
-		err = transactiondata.CreateTransaction(recipientAccountId, amount, "入金")
-		if err != nil {
-			http.Error(w, "取引を処理することができませんでした", http.StatusInternalServerError)
-			return
-		}
-
-		err = acountdata.UpdateBalance(account.AccountID, account.Balance-amount)
-		if err != nil {
-			http.Error(w, "口座の残高を更新できませんでした", http.StatusInternalServerError)
-			return
-		}
-
-		recipientAccount, err := acountdata.GetAccountByAccountId(recipientAccountId)
-		if err != nil {
-			http.Error(w, "受取人のアカウントが見つかりませんでした", http.StatusNotFound)
-			return
-		}
-
-		err = acountdata.UpdateBalance(recipientAccountId, recipientAccount.Balance+amount)
-		if err != nil {
-			http.Error(w, "受取人の口座の残高を更新できませんでした", http.StatusInternalServerError)
+			http.Error(w, "振込に失敗しました", http.StatusInternalServerError)
 			return
 		}
 
@@ -354,6 +325,7 @@ func TransferHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 }
+
 
 func Start() error {
 	http.HandleFunc("/create", CreateAccountHandler)

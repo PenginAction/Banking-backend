@@ -38,7 +38,7 @@
         {{range .Transactions}}
         <tr>
             <td>{{.TransactionDate}}</td>
-            <td>{{if eq .TransactionType "入金"}}入金{{else}}出金{{end}}</td>
+            <td>{{.TransactionType}}</td>
             <td>{{.TransactionAmount}}</td>
         </tr>
         {{end}}

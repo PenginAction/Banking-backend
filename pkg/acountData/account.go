@@ -2,6 +2,7 @@ package acountdata
 
 import (
 	"bank/pkg/database"
+	transactiondata "bank/pkg/transactionData"
 	"log"
 )
 
@@ -40,5 +41,34 @@ func UpdateBalance(accountId int, newBalance float64) error {
 		log.Printf("口座の残高の更新に失敗しました: %s", err.Error())
 		return err
 	}
+	return nil
+}
+
+func TransferFunds(senderAccountId int, recipientAccountId int, amount float64) error {
+  
+	_, err := database.Db.Exec("UPDATE Account SET Balance = Balance - ? WHERE AccountID = ?", amount, senderAccountId)
+	if err != nil {
+		log.Printf("送金者のアカウントからの引き出しに失敗しました: %s", err.Error())
+		return err
+	}
+
+	err = transactiondata.CreateTransaction(senderAccountId, recipientAccountId,  amount, "振込")
+	if err != nil {
+		log.Printf("送金者の取引ログの作成に失敗しました: %s", err.Error())
+		return err
+	}
+  
+	_, err = database.Db.Exec("UPDATE Account SET Balance = Balance + ? WHERE AccountID = ?", amount, recipientAccountId)
+	if err != nil {
+		log.Printf("受取人のアカウントへの入金に失敗しました: %s", err.Error())
+		return err
+	}
+
+	err = transactiondata.CreateTransaction(recipientAccountId, recipientAccountId, amount, "振込")
+	if err != nil {
+		log.Printf("受取人の取引ログの作成に失敗しました: %s", err.Error())
+		return err
+	}
+
 	return nil
 }
