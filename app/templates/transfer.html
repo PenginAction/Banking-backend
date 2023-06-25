@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>振込フォーム</title>
+</head>
+<body>
+    <h1>振込</h1>
+
+    <form action="/transfer" method="post">
+        <label for="accountID">振込先の口座番号を入力してください．</label><br>
+        <input type="text" id="accountID" name="accountID" required></br>
+        <label for="amount">振込金額を入力してください.</label><br>
+        <input type="number" id="amount" name= "amount" min="0", step="0.01" required></br>
+        <label for="pin">ご自身の暗証番号を入力してください</label><br>
+        <input type="password" id="pin" name="pin" required></br>
+        <input type="submit" value="振込">
+    </form>
+</body>
+</html>
