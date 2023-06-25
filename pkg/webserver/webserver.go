@@ -133,7 +133,7 @@ func AccountHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	data := map[string]interface{}{
-		"User":         user,
+		"Name":         user.Name,
 		"AccountID":    account.AccountID,
 		"Balance":      account.Balance,
 		"Transactions": transactions,
