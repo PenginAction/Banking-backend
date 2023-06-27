@@ -15,7 +15,7 @@ type User struct {
 	Name     string `json:"name"`
 	Email    string `json:"email"`
 	Password string `json:"password"`
-	Pin string `json:"pin"`
+	Pin      string `json:"pin"`
 }
 
 var r *rand.Rand
@@ -138,7 +138,7 @@ func GetAccountById(id int) (*User, error) {
 	return &user, nil
 }
 
-func CompareHashAndPin(userPin, pin string) error{
+func CompareHashAndPin(userPin, pin string) error {
 	err := bcrypt.CompareHashAndPassword([]byte(userPin), []byte(pin))
 	if err != nil {
 		log.Printf("認証に失敗しました: 暗証番号が一致しません")
