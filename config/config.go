@@ -27,11 +27,11 @@ func init() {
 	}
 
 	Config = Configs{
-		DbUser:      cfg.Section("database").Key("dbuser").String(),
-		DbPass:      cfg.Section("database").Key("dbpass").String(),
-		DbLocal:     cfg.Section("database").Key("dblocal").String(),
-		DbPort:      cfg.Section("database").Key("dbport").String(),
-		DbName:      cfg.Section("database").Key("dbname").String(),
+		DbUser:      os.Getenv("DB_USER"),
+		DbPass:      os.Getenv("DB_PASSWORD"),
+		DbLocal:     os.Getenv("DB_LOCAL"),
+		DbPort:      os.Getenv("DB_PORT"),
+		DbName:      os.Getenv("DB_NAME"),
 		BankLogfile: cfg.Section("bank").Key("logfile").String(),
 		Port:        cfg.Section("web").Key("port").MustInt(),
 	}
