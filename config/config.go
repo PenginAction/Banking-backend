@@ -3,8 +3,7 @@ package config
 import (
 	"log"
 	"os"
-
-	"github.com/go-ini/ini"
+	"strconv"
 )
 
 type Configs struct {
@@ -20,9 +19,9 @@ type Configs struct {
 var Config Configs
 
 func init() {
-	cfg, err := ini.Load("config.ini")
+	port, err := strconv.Atoi(os.Getenv("WEBPORT"))
 	if err != nil {
-		log.Printf("ファイルの読み込みに失敗しました: %v", err)
+		log.Printf("ポートを整数に変換できませんでした: %v", err)
 		os.Exit(1)
 	}
 
@@ -32,7 +31,7 @@ func init() {
 		DbLocal:     os.Getenv("DB_LOCAL"),
 		DbPort:      os.Getenv("DB_PORT"),
 		DbName:      os.Getenv("DB_NAME"),
-		BankLogfile: cfg.Section("bank").Key("logfile").String(),
-		Port:        cfg.Section("web").Key("port").MustInt(),
+		BankLogfile: os.Getenv("LOGFILE"),
+		Port:        port,
 	}
 }
