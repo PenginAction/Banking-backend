@@ -4,6 +4,8 @@ import (
 	"log"
 	"os"
 	"strconv"
+
+	"github.com/joho/godotenv"
 )
 
 type Configs struct {
@@ -20,6 +22,12 @@ type Configs struct {
 var Config Configs
 
 func init() {
+
+	err := godotenv.Load(".env")
+	if err != nil {
+		log.Printf(".envを読み込めませんでした: %v", err)
+	}
+
 	port, err := strconv.Atoi(os.Getenv("WEBPORT"))
 	if err != nil {
 		log.Printf("ポートを整数に変換できませんでした: %v", err)
